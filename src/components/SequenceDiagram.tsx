@@ -155,75 +155,86 @@ export default function SequenceDiagram() {
 
   const getParticipantIndex = (id: string) => participants.findIndex(p => p.id === id);
 
+  const getStepOpacity = (stepIndex: number) => {
+    if (completedSteps.includes(steps[stepIndex].id)) return 'opacity-100';
+    if (currentStep === stepIndex) return 'opacity-100';
+    return 'opacity-30';
+  };
+
+  const getStepScale = (stepIndex: number) => {
+    if (currentStep === stepIndex) return 'scale-105';
+    return 'scale-100';
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
+    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+        <div className="text-center mb-6 lg:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2 lg:mb-4">
             CQRS Event Sourcing Flow
           </h1>
-          <p className="text-gray-600 text-lg">Order Processing with Saga Pattern</p>
+          <p className="text-gray-600 text-base lg:text-lg">Order Processing with Saga Pattern</p>
         </div>
 
         {/* Flow Selection */}
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 lg:mb-8">
           <button
             onClick={() => handleFlowChange('success')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all text-sm sm:text-base ${
               selectedFlow === 'success' 
                 ? 'bg-green-500 text-white shadow-lg' 
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            <CheckCircle size={18} />
+            <CheckCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
             Success Flow
           </button>
           <button
             onClick={() => handleFlowChange('paymentFailure')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all text-sm sm:text-base ${
               selectedFlow === 'paymentFailure' 
                 ? 'bg-red-500 text-white shadow-lg' 
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            <AlertTriangle size={18} />
+            <AlertTriangle size={16} className="sm:w-[18px] sm:h-[18px]" />
             Payment Failure
           </button>
           <button
             onClick={() => handleFlowChange('shipmentFailure')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all text-sm sm:text-base ${
               selectedFlow === 'shipmentFailure' 
                 ? 'bg-orange-500 text-white shadow-lg' 
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            <AlertTriangle size={18} />
+            <AlertTriangle size={16} className="sm:w-[18px] sm:h-[18px]" />
             Shipment Failure
           </button>
         </div>
 
         {/* Controls */}
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200">
-            <div className="flex items-center gap-4">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 lg:mb-8">
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow-lg border border-gray-200">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={handlePlay}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-white font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 text-sm sm:text-base ${
                   isPlaying ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-500 hover:bg-blue-600'
                 }`}
               >
-                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                {isPlaying ? <Pause size={16} className="sm:w-5 sm:h-5" /> : <Play size={16} className="sm:w-5 sm:h-5" />}
                 {isPlaying ? 'Pause' : currentStep >= steps.length ? 'Replay' : 'Play'}
               </button>
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 rounded-lg text-white font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 hover:bg-gray-600 rounded-lg text-white font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 text-sm sm:text-base"
               >
-                <RotateCcw size={20} />
+                <RotateCcw size={16} className="sm:w-5 sm:h-5" />
                 Reset
               </button>
-              <div className="text-gray-700 font-medium">
+              <div className="text-gray-700 font-medium text-sm sm:text-base">
                 Step {Math.min(currentStep + 1, steps.length)} of {steps.length}
               </div>
             </div>
@@ -231,13 +242,13 @@ export default function SequenceDiagram() {
         </div>
 
         {/* Participants */}
-        <div className="overflow-x-auto mb-12">
+        <div className="overflow-x-auto mb-8 lg:mb-12">
           <div className="min-w-max">
-            <div className="grid grid-cols-9 gap-4 lg:gap-8 mb-8">
+            <div className="grid grid-cols-9 gap-2 sm:gap-4 lg:gap-8 mb-6 lg:mb-8">
               {participants.map((participant) => (
                 <div key={participant.id} className="flex flex-col items-center min-w-0">
-                  <div className={`w-12 h-12 lg:w-16 lg:h-16 rounded-lg ${participant.color} shadow-lg flex items-center justify-center mb-3 transform transition-all duration-300 hover:scale-110`}>
-                    <span className="text-white font-bold text-sm lg:text-base">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-lg ${participant.color} shadow-lg flex items-center justify-center mb-2 lg:mb-3 transform transition-all duration-300 hover:scale-110`}>
+                    <span className="text-white font-bold text-xs sm:text-sm lg:text-base">
                       {participant.shortName}
                     </span>
                   </div>
@@ -245,7 +256,7 @@ export default function SequenceDiagram() {
                     {participant.name}
                   </div>
                   {/* Lifeline */}
-                  <div className="w-0.5 bg-gray-300 h-96 lg:h-[600px] mt-4"></div>
+                  <div className="w-0.5 bg-gray-300 mt-2 lg:mt-4" style={{ height: `${steps.length * 60 + 100}px` }}></div>
                 </div>
               ))}
             </div>
@@ -255,26 +266,20 @@ export default function SequenceDiagram() {
               {steps.map((step, index) => {
                 const fromIndex = getParticipantIndex(step.from);
                 const toIndex = getParticipantIndex(step.to);
-                const isCompleted = completedSteps.includes(step.id);
-                const isCurrent = currentStep === index;
                 
-                if (!isCompleted && !isCurrent) return null;
-
-                const leftPos = Math.min(fromIndex, toIndex) * 12.5 + 6;
-                const width = Math.abs(toIndex - fromIndex) * 12.5;
-                const topPos = index * 80 + 20;
+                const leftPos = Math.min(fromIndex, toIndex) * 11.11 + 5.55;
+                const width = Math.abs(toIndex - fromIndex) * 11.11;
+                const topPos = index * 60 + 20;
                 const isReverse = fromIndex > toIndex;
 
                 return (
                   <div
                     key={step.id}
-                    className={`absolute transition-all duration-500 ${
-                      isCurrent ? 'z-10' : 'z-0'
-                    }`}
+                    className={`absolute transition-all duration-500 ${getStepOpacity(index)} ${getStepScale(index)}`}
                     style={{
                       left: `${leftPos}%`,
                       top: `${topPos}px`,
-                      width: width === 0 ? '12.5%' : `${width}%`
+                      width: width === 0 ? '11.11%' : `${width}%`
                     }}
                   >
                     {/* Arrow Line */}
@@ -286,22 +291,22 @@ export default function SequenceDiagram() {
                           className={`absolute -right-2 -top-2 text-gray-700 ${
                             isReverse ? 'rotate-180 -left-2' : ''
                           }`} 
-                          size={16} 
+                          size={14} 
                         />
                       )}
                       {step.from === step.to && (
-                        <div className="absolute -right-2 -top-2 w-4 h-4 border-2 border-gray-700 rounded-full bg-white"></div>
+                        <div className="absolute -right-2 -top-2 w-3 h-3 border-2 border-gray-700 rounded-full bg-white"></div>
                       )}
                     </div>
                     
                     {/* Message Box */}
-                    <div className={`mt-3 border-2 rounded-lg p-3 shadow-lg transform transition-all duration-300 max-w-xs lg:max-w-sm ${
+                    <div className={`mt-2 border-2 rounded-lg p-2 sm:p-3 shadow-lg transform transition-all duration-300 max-w-xs lg:max-w-sm ${
                       getConditionColor(step.condition)
-                    } ${isCurrent ? 'scale-105 shadow-xl animate-pulse' : ''}`}>
+                    } ${currentStep === index ? 'shadow-xl ring-2 ring-blue-300' : ''}`}>
                       <div className="text-gray-800 text-xs lg:text-sm font-medium mb-2 break-words">
                         {step.message}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
                         <span className={`text-xs px-2 py-1 rounded-full text-white ${getMessageTypeColor(step.type)}`}>
                           {step.type}
                         </span>
@@ -325,9 +330,9 @@ export default function SequenceDiagram() {
 
         {/* Legend */}
         <div className="flex justify-center">
-          <div className="bg-white rounded-lg p-6 shadow-lg border border-gray-200 max-w-4xl w-full">
-            <h3 className="text-gray-800 font-semibold mb-4 text-center">Message Types & Flow Patterns</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-lg border border-gray-200 max-w-4xl w-full">
+            <h3 className="text-gray-800 font-semibold mb-4 text-center text-sm sm:text-base">Message Types & Flow Patterns</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
               {[
                 { type: 'command', label: 'Command', color: 'bg-blue-500' },
                 { type: 'event', label: 'Event', color: 'bg-purple-500' },
@@ -335,22 +340,22 @@ export default function SequenceDiagram() {
                 { type: 'response', label: 'Response', color: 'bg-yellow-500' }
               ].map(({ type, label, color }) => (
                 <div key={type} className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded ${color}`}></div>
-                  <span className="text-gray-700 text-sm">{label}</span>
+                  <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded ${color}`}></div>
+                  <span className="text-gray-700 text-xs sm:text-sm">{label}</span>
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
               <div className="flex items-center gap-2">
-                <CheckCircle size={16} className="text-green-500" />
+                <CheckCircle size={14} className="text-green-500 sm:w-4 sm:h-4" />
                 <span>Success: Complete order processing</span>
               </div>
               <div className="flex items-center gap-2">
-                <AlertTriangle size={16} className="text-red-500" />
+                <AlertTriangle size={14} className="text-red-500 sm:w-4 sm:h-4" />
                 <span>Payment Failure: Order cancellation</span>
               </div>
               <div className="flex items-center gap-2">
-                <AlertTriangle size={16} className="text-orange-500" />
+                <AlertTriangle size={14} className="text-orange-500 sm:w-4 sm:h-4" />
                 <span>Shipment Failure: Compensation flow</span>
               </div>
             </div>

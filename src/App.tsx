@@ -1,11 +1,8 @@
 import React from 'react';
+import SequenceDiagram from './components/SequenceDiagram';
 
 function App() {
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <p>Start prompting (or editing) to see magic happen :)</p>
-    </div>
-  );
+  return <SequenceDiagram />;
 }
 
 export default App;

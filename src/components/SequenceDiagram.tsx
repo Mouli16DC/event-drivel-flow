@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, ChevronRight } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronRight, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface Step {
   id: number;
@@ -8,45 +8,96 @@ interface Step {
   message: string;
   type: 'command' | 'event' | 'query' | 'response';
   delay: number;
-  condition?: 'success' | 'failure';
+  condition?: 'success' | 'failure' | 'normal';
+  description?: string;
 }
 
 const participants = [
-  { id: 'client', name: 'Client', color: 'from-blue-400 to-blue-600' },
-  { id: 'orderService', name: 'OrderService', color: 'from-purple-400 to-purple-600' },
-  { id: 'orderAggregate', name: 'OrderAggregate', color: 'from-indigo-400 to-indigo-600' },
-  { id: 'saga', name: 'Saga (Orchestrator)', color: 'from-pink-400 to-pink-600' },
-  { id: 'paymentService', name: 'PaymentService', color: 'from-green-400 to-green-600' },
-  { id: 'userService', name: 'UserService', color: 'from-yellow-400 to-yellow-600' },
-  { id: 'paymentAggregate', name: 'PaymentAggregate', color: 'from-teal-400 to-teal-600' },
-  { id: 'shipmentService', name: 'ShipmentService', color: 'from-orange-400 to-orange-600' },
-  { id: 'shipmentAggregate', name: 'ShipmentAggregate', color: 'from-red-400 to-red-600' }
+  { id: 'client', name: 'Client', color: 'bg-blue-500', shortName: 'C' },
+  { id: 'orderService', name: 'OrderService', color: 'bg-purple-500', shortName: 'OS' },
+  { id: 'orderAggregate', name: 'OrderAggregate', color: 'bg-indigo-500', shortName: 'OA' },
+  { id: 'saga', name: 'Saga (Orchestrator)', color: 'bg-pink-500', shortName: 'S' },
+  { id: 'paymentService', name: 'PaymentService', color: 'bg-green-500', shortName: 'PS' },
+  { id: 'userService', name: 'UserService', color: 'bg-yellow-500', shortName: 'US' },
+  { id: 'paymentAggregate', name: 'PaymentAggregate', color: 'bg-teal-500', shortName: 'PA' },
+  { id: 'shipmentService', name: 'ShipmentService', color: 'bg-orange-500', shortName: 'SS' },
+  { id: 'shipmentAggregate', name: 'ShipmentAggregate', color: 'bg-red-500', shortName: 'SA' }
 ];
 
-const steps: Step[] = [
-  { id: 1, from: 'client', to: 'orderService', message: 'CreateOrderCommand', type: 'command', delay: 500 },
-  { id: 2, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 300 },
-  { id: 3, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCreatedEvent)', type: 'event', delay: 400 },
-  { id: 4, from: 'orderAggregate', to: 'saga', message: 'OrderCreatedEvent', type: 'event', delay: 500 },
-  { id: 5, from: 'saga', to: 'paymentService', message: 'ValidatePaymentCommand', type: 'command', delay: 600 },
-  { id: 6, from: 'paymentService', to: 'paymentAggregate', message: '@CommandHandler', type: 'command', delay: 300 },
-  { id: 7, from: 'paymentAggregate', to: 'userService', message: 'GetUserPaymentDetailQuery', type: 'query', delay: 400 },
-  { id: 8, from: 'userService', to: 'paymentAggregate', message: 'UserDTO', type: 'response', delay: 300 },
-  { id: 9, from: 'paymentAggregate', to: 'paymentAggregate', message: 'apply(PaymentProcessedEvent)', type: 'event', delay: 400, condition: 'success' },
-  { id: 10, from: 'paymentAggregate', to: 'saga', message: 'PaymentProcessedEvent', type: 'event', delay: 500, condition: 'success' },
-  { id: 11, from: 'saga', to: 'shipmentService', message: 'ShipOrderCommand', type: 'command', delay: 600, condition: 'success' },
-  { id: 12, from: 'shipmentService', to: 'shipmentAggregate', message: '@CommandHandler', type: 'command', delay: 300, condition: 'success' },
-  { id: 13, from: 'shipmentAggregate', to: 'shipmentAggregate', message: 'apply(OrderShipEvent)', type: 'event', delay: 400, condition: 'success' },
-  { id: 14, from: 'shipmentAggregate', to: 'saga', message: 'OrderShipEvent', type: 'event', delay: 500, condition: 'success' },
-  { id: 15, from: 'saga', to: 'orderService', message: 'CompleteOrderCommand', type: 'command', delay: 600, condition: 'success' },
-  { id: 16, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 300, condition: 'success' },
-  { id: 17, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCompletedEvent)', type: 'event', delay: 400, condition: 'success' }
+const successSteps: Step[] = [
+  { id: 1, from: 'client', to: 'orderService', message: 'CommandGateway.send(CreateOrderCommand)', type: 'command', delay: 800, condition: 'normal' },
+  { id: 2, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
+  { id: 3, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCreatedEvent)', type: 'event', delay: 600, condition: 'normal' },
+  { id: 4, from: 'orderAggregate', to: 'saga', message: 'EventBus.publish(OrderCreatedEvent)', type: 'event', delay: 700, condition: 'normal' },
+  { id: 5, from: 'saga', to: 'paymentService', message: 'CommandGateway.send(ValidatePaymentCommand)', type: 'command', delay: 800, condition: 'normal' },
+  { id: 6, from: 'paymentService', to: 'paymentAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
+  { id: 7, from: 'paymentAggregate', to: 'userService', message: 'QueryGateway.query(GetUserPaymentDetailQuery)', type: 'query', delay: 600, condition: 'normal' },
+  { id: 8, from: 'userService', to: 'paymentAggregate', message: 'UserDTO', type: 'response', delay: 500, condition: 'normal' },
+  { id: 9, from: 'paymentAggregate', to: 'paymentAggregate', message: 'apply(PaymentProcessedEvent)', type: 'event', delay: 600, condition: 'success' },
+  { id: 10, from: 'paymentAggregate', to: 'saga', message: 'EventBus.publish(PaymentProcessedEvent)', type: 'event', delay: 700, condition: 'success' },
+  { id: 11, from: 'saga', to: 'shipmentService', message: 'CommandGateway.send(ShipOrderCommand)', type: 'command', delay: 800, condition: 'success' },
+  { id: 12, from: 'shipmentService', to: 'shipmentAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'success' },
+  { id: 13, from: 'shipmentAggregate', to: 'shipmentAggregate', message: 'apply(OrderShipEvent)', type: 'event', delay: 600, condition: 'success' },
+  { id: 14, from: 'shipmentAggregate', to: 'saga', message: 'EventBus.publish(OrderShipEvent)', type: 'event', delay: 700, condition: 'success' },
+  { id: 15, from: 'saga', to: 'orderService', message: 'CommandGateway.send(CompleteOrderCommand)', type: 'command', delay: 800, condition: 'success' },
+  { id: 16, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'success' },
+  { id: 17, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCompletedEvent)', type: 'event', delay: 600, condition: 'success' }
+];
+
+const paymentFailureSteps: Step[] = [
+  { id: 1, from: 'client', to: 'orderService', message: 'CommandGateway.send(CreateOrderCommand)', type: 'command', delay: 800, condition: 'normal' },
+  { id: 2, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
+  { id: 3, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCreatedEvent)', type: 'event', delay: 600, condition: 'normal' },
+  { id: 4, from: 'orderAggregate', to: 'saga', message: 'EventBus.publish(OrderCreatedEvent)', type: 'event', delay: 700, condition: 'normal' },
+  { id: 5, from: 'saga', to: 'paymentService', message: 'CommandGateway.send(ValidatePaymentCommand)', type: 'command', delay: 800, condition: 'normal' },
+  { id: 6, from: 'paymentService', to: 'paymentAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
+  { id: 7, from: 'paymentAggregate', to: 'userService', message: 'QueryGateway.query(GetUserPaymentDetailQuery)', type: 'query', delay: 600, condition: 'normal' },
+  { id: 8, from: 'userService', to: 'paymentAggregate', message: 'UserDTO', type: 'response', delay: 500, condition: 'normal' },
+  { id: 9, from: 'paymentAggregate', to: 'paymentAggregate', message: 'apply(PaymentCancelledEvent)', type: 'event', delay: 600, condition: 'failure' },
+  { id: 10, from: 'paymentAggregate', to: 'saga', message: 'EventBus.publish(PaymentCancelledEvent)', type: 'event', delay: 700, condition: 'failure' },
+  { id: 11, from: 'saga', to: 'orderService', message: 'CommandGateway.send(CancelOrderCommand)', type: 'command', delay: 800, condition: 'failure' },
+  { id: 12, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'failure' },
+  { id: 13, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCancelledEvent)', type: 'event', delay: 600, condition: 'failure' }
+];
+
+const shipmentFailureSteps: Step[] = [
+  { id: 1, from: 'client', to: 'orderService', message: 'CommandGateway.send(CreateOrderCommand)', type: 'command', delay: 800, condition: 'normal' },
+  { id: 2, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
+  { id: 3, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCreatedEvent)', type: 'event', delay: 600, condition: 'normal' },
+  { id: 4, from: 'orderAggregate', to: 'saga', message: 'EventBus.publish(OrderCreatedEvent)', type: 'event', delay: 700, condition: 'normal' },
+  { id: 5, from: 'saga', to: 'paymentService', message: 'CommandGateway.send(ValidatePaymentCommand)', type: 'command', delay: 800, condition: 'normal' },
+  { id: 6, from: 'paymentService', to: 'paymentAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
+  { id: 7, from: 'paymentAggregate', to: 'userService', message: 'QueryGateway.query(GetUserPaymentDetailQuery)', type: 'query', delay: 600, condition: 'normal' },
+  { id: 8, from: 'userService', to: 'paymentAggregate', message: 'UserDTO', type: 'response', delay: 500, condition: 'normal' },
+  { id: 9, from: 'paymentAggregate', to: 'paymentAggregate', message: 'apply(PaymentProcessedEvent)', type: 'event', delay: 600, condition: 'success' },
+  { id: 10, from: 'paymentAggregate', to: 'saga', message: 'EventBus.publish(PaymentProcessedEvent)', type: 'event', delay: 700, condition: 'success' },
+  { id: 11, from: 'saga', to: 'shipmentService', message: 'CommandGateway.send(ShipOrderCommand)', type: 'command', delay: 800, condition: 'success' },
+  { id: 12, from: 'shipmentService', to: 'shipmentAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'success' },
+  { id: 13, from: 'shipmentAggregate', to: 'shipmentAggregate', message: 'apply(ShipmentCancelledEvent)', type: 'event', delay: 600, condition: 'failure' },
+  { id: 14, from: 'shipmentAggregate', to: 'saga', message: 'EventBus.publish(ShipmentCancelledEvent)', type: 'event', delay: 700, condition: 'failure' },
+  { id: 15, from: 'saga', to: 'paymentService', message: 'CommandGateway.send(CancelPaymentCommand)', type: 'command', delay: 800, condition: 'failure' },
+  { id: 16, from: 'saga', to: 'orderService', message: 'CommandGateway.send(CancelOrderCommand)', type: 'command', delay: 800, condition: 'failure' },
+  { id: 17, from: 'paymentService', to: 'paymentAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'failure' },
+  { id: 18, from: 'paymentAggregate', to: 'paymentAggregate', message: 'apply(PaymentCancelledEvent)', type: 'event', delay: 600, condition: 'failure' },
+  { id: 19, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'failure' },
+  { id: 20, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCancelledEvent)', type: 'event', delay: 600, condition: 'failure' }
 ];
 
 export default function SequenceDiagram() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [selectedFlow, setSelectedFlow] = useState<'success' | 'paymentFailure' | 'shipmentFailure'>('success');
+
+  const getCurrentSteps = () => {
+    switch (selectedFlow) {
+      case 'paymentFailure': return paymentFailureSteps;
+      case 'shipmentFailure': return shipmentFailureSteps;
+      default: return successSteps;
+    }
+  };
+
+  const steps = getCurrentSteps();
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -61,7 +112,7 @@ export default function SequenceDiagram() {
     }
 
     return () => clearTimeout(timeout);
-  }, [isPlaying, currentStep]);
+  }, [isPlaying, currentStep, steps]);
 
   const handlePlay = () => {
     if (currentStep >= steps.length) {
@@ -76,48 +127,100 @@ export default function SequenceDiagram() {
     setIsPlaying(false);
   };
 
+  const handleFlowChange = (flow: 'success' | 'paymentFailure' | 'shipmentFailure') => {
+    setSelectedFlow(flow);
+    handleReset();
+  };
+
   const getMessageTypeColor = (type: string) => {
     switch (type) {
-      case 'command': return 'from-blue-500 to-blue-700';
-      case 'event': return 'from-purple-500 to-purple-700';
-      case 'query': return 'from-green-500 to-green-700';
-      case 'response': return 'from-yellow-500 to-yellow-700';
-      default: return 'from-gray-500 to-gray-700';
+      case 'command': return 'bg-blue-500';
+      case 'event': return 'bg-purple-500';
+      case 'query': return 'bg-green-500';
+      case 'response': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getConditionColor = (condition?: string) => {
+    switch (condition) {
+      case 'success': return 'border-green-500 bg-green-50';
+      case 'failure': return 'border-red-500 bg-red-50';
+      default: return 'border-gray-300 bg-white';
     }
   };
 
   const getParticipantIndex = (id: string) => participants.findIndex(p => p.id === id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
             CQRS Event Sourcing Flow
           </h1>
-          <p className="text-gray-300 text-lg">Order Processing with Saga Pattern</p>
+          <p className="text-gray-600 text-lg">Order Processing with Saga Pattern</p>
+        </div>
+
+        {/* Flow Selection */}
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
+          <button
+            onClick={() => handleFlowChange('success')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedFlow === 'success' 
+                ? 'bg-green-500 text-white shadow-lg' 
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <CheckCircle size={18} />
+            Success Flow
+          </button>
+          <button
+            onClick={() => handleFlowChange('paymentFailure')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedFlow === 'paymentFailure' 
+                ? 'bg-red-500 text-white shadow-lg' 
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <AlertTriangle size={18} />
+            Payment Failure
+          </button>
+          <button
+            onClick={() => handleFlowChange('shipmentFailure')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedFlow === 'shipmentFailure' 
+                ? 'bg-orange-500 text-white shadow-lg' 
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <AlertTriangle size={18} />
+            Shipment Failure
+          </button>
         </div>
 
         {/* Controls */}
-        <div className="flex justify-center mb-8">
-          <div className="backdrop-blur-md bg-white/10 rounded-2xl p-4 border border-white/20 shadow-2xl">
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
+          <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200">
             <div className="flex items-center gap-4">
               <button
                 onClick={handlePlay}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 ${
+                  isPlaying ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-500 hover:bg-blue-600'
+                }`}
               >
                 {isPlaying ? <Pause size={20} /> : <Play size={20} />}
                 {isPlaying ? 'Pause' : currentStep >= steps.length ? 'Replay' : 'Play'}
               </button>
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl text-white font-medium hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 rounded-lg text-white font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105"
               >
                 <RotateCcw size={20} />
                 Reset
               </button>
-              <div className="text-white/80 font-medium">
+              <div className="text-gray-700 font-medium">
                 Step {Math.min(currentStep + 1, steps.length)} of {steps.length}
               </div>
             </div>
@@ -125,98 +228,128 @@ export default function SequenceDiagram() {
         </div>
 
         {/* Participants */}
-        <div className="grid grid-cols-3 lg:grid-cols-9 gap-4 mb-12">
-          {participants.map((participant, index) => (
-            <div key={participant.id} className="flex flex-col items-center">
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${participant.color} backdrop-blur-md border border-white/20 shadow-2xl flex items-center justify-center mb-3 transform transition-all duration-300 hover:scale-110`}>
-                <div className="w-8 h-8 bg-white/20 rounded-lg"></div>
-              </div>
-              <div className="text-white text-sm font-medium text-center leading-tight">
-                {participant.name}
-              </div>
-              {/* Lifeline */}
-              <div className="w-0.5 bg-gradient-to-b from-white/40 to-transparent h-96 mt-4"></div>
+        <div className="overflow-x-auto mb-12">
+          <div className="min-w-max">
+            <div className="grid grid-cols-9 gap-4 lg:gap-8 mb-8">
+              {participants.map((participant) => (
+                <div key={participant.id} className="flex flex-col items-center min-w-0">
+                  <div className={`w-12 h-12 lg:w-16 lg:h-16 rounded-lg ${participant.color} shadow-lg flex items-center justify-center mb-3 transform transition-all duration-300 hover:scale-110`}>
+                    <span className="text-white font-bold text-sm lg:text-base">
+                      {participant.shortName}
+                    </span>
+                  </div>
+                  <div className="text-gray-800 text-xs lg:text-sm font-medium text-center leading-tight px-1">
+                    {participant.name}
+                  </div>
+                  {/* Lifeline */}
+                  <div className="w-0.5 bg-gray-300 h-96 lg:h-[600px] mt-4"></div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Messages */}
-        <div className="relative">
-          {steps.map((step, index) => {
-            const fromIndex = getParticipantIndex(step.from);
-            const toIndex = getParticipantIndex(step.to);
-            const isCompleted = completedSteps.includes(step.id);
-            const isCurrent = currentStep === index;
-            
-            if (!isCompleted && !isCurrent) return null;
-
-            const leftPos = Math.min(fromIndex, toIndex) * (100 / 9) + 5.5;
-            const width = Math.abs(toIndex - fromIndex) * (100 / 9);
-            const topPos = index * 60 + 20;
-
-            return (
-              <div
-                key={step.id}
-                className={`absolute transition-all duration-500 ${
-                  isCurrent ? 'animate-pulse' : ''
-                }`}
-                style={{
-                  left: `${leftPos}%`,
-                  top: `${topPos}px`,
-                  width: `${width}%`
-                }}
-              >
-                {/* Arrow Line */}
-                <div className={`h-0.5 bg-gradient-to-r ${getMessageTypeColor(step.type)} relative`}>
-                  <ChevronRight 
-                    className={`absolute -right-2 -top-2 text-white ${
-                      fromIndex > toIndex ? 'rotate-180' : ''
-                    }`} 
-                    size={16} 
-                  />
-                </div>
+            {/* Messages */}
+            <div className="relative">
+              {steps.map((step, index) => {
+                const fromIndex = getParticipantIndex(step.from);
+                const toIndex = getParticipantIndex(step.to);
+                const isCompleted = completedSteps.includes(step.id);
+                const isCurrent = currentStep === index;
                 
-                {/* Message Box */}
-                <div className={`mt-2 backdrop-blur-md bg-white/10 rounded-lg p-3 border border-white/20 shadow-xl transform transition-all duration-300 ${
-                  isCurrent ? 'scale-105 shadow-2xl' : ''
-                }`}>
-                  <div className="text-white text-sm font-medium mb-1">
-                    {step.message}
-                  </div>
-                  <div className={`text-xs px-2 py-1 rounded-full bg-gradient-to-r ${getMessageTypeColor(step.type)} text-white inline-block`}>
-                    {step.type}
-                  </div>
-                  {step.condition && (
-                    <div className={`text-xs px-2 py-1 rounded-full ml-2 inline-block ${
-                      step.condition === 'success' 
-                        ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
-                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                if (!isCompleted && !isCurrent) return null;
+
+                const leftPos = Math.min(fromIndex, toIndex) * 12.5 + 6;
+                const width = Math.abs(toIndex - fromIndex) * 12.5;
+                const topPos = index * 80 + 20;
+                const isReverse = fromIndex > toIndex;
+
+                return (
+                  <div
+                    key={step.id}
+                    className={`absolute transition-all duration-500 ${
+                      isCurrent ? 'z-10' : 'z-0'
+                    }`}
+                    style={{
+                      left: `${leftPos}%`,
+                      top: `${topPos}px`,
+                      width: width === 0 ? '12.5%' : `${width}%`
+                    }}
+                  >
+                    {/* Arrow Line */}
+                    <div className={`h-0.5 ${getMessageTypeColor(step.type)} relative ${
+                      step.from === step.to ? 'rounded-r-full' : ''
                     }`}>
-                      {step.condition}
+                      {step.from !== step.to && (
+                        <ChevronRight 
+                          className={`absolute -right-2 -top-2 text-gray-700 ${
+                            isReverse ? 'rotate-180 -left-2' : ''
+                          }`} 
+                          size={16} 
+                        />
+                      )}
+                      {step.from === step.to && (
+                        <div className="absolute -right-2 -top-2 w-4 h-4 border-2 border-gray-700 rounded-full bg-white"></div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                    
+                    {/* Message Box */}
+                    <div className={`mt-3 border-2 rounded-lg p-3 shadow-lg transform transition-all duration-300 max-w-xs lg:max-w-sm ${
+                      getConditionColor(step.condition)
+                    } ${isCurrent ? 'scale-105 shadow-xl animate-pulse' : ''}`}>
+                      <div className="text-gray-800 text-xs lg:text-sm font-medium mb-2 break-words">
+                        {step.message}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full text-white ${getMessageTypeColor(step.type)}`}>
+                          {step.type}
+                        </span>
+                        {step.condition && step.condition !== 'normal' && (
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            step.condition === 'success' 
+                              ? 'bg-green-100 text-green-800 border border-green-300' 
+                              : 'bg-red-100 text-red-800 border border-red-300'
+                          }`}>
+                            {step.condition}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Legend */}
-        <div className="mt-24 flex justify-center">
-          <div className="backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-2xl">
-            <h3 className="text-white font-semibold mb-4 text-center">Message Types</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex justify-center">
+          <div className="bg-white rounded-lg p-6 shadow-lg border border-gray-200 max-w-4xl w-full">
+            <h3 className="text-gray-800 font-semibold mb-4 text-center">Message Types & Flow Patterns</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {[
-                { type: 'command', label: 'Command', color: 'from-blue-500 to-blue-700' },
-                { type: 'event', label: 'Event', color: 'from-purple-500 to-purple-700' },
-                { type: 'query', label: 'Query', color: 'from-green-500 to-green-700' },
-                { type: 'response', label: 'Response', color: 'from-yellow-500 to-yellow-700' }
+                { type: 'command', label: 'Command', color: 'bg-blue-500' },
+                { type: 'event', label: 'Event', color: 'bg-purple-500' },
+                { type: 'query', label: 'Query', color: 'bg-green-500' },
+                { type: 'response', label: 'Response', color: 'bg-yellow-500' }
               ].map(({ type, label, color }) => (
                 <div key={type} className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded bg-gradient-to-r ${color}`}></div>
-                  <span className="text-white/80 text-sm">{label}</span>
+                  <div className={`w-4 h-4 rounded ${color}`}></div>
+                  <span className="text-gray-700 text-sm">{label}</span>
                 </div>
               ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-500" />
+                <span>Success: Complete order processing</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={16} className="text-red-500" />
+                <span>Payment Failure: Order cancellation</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={16} className="text-orange-500" />
+                <span>Shipment Failure: Compensation flow</span>
+              </div>
             </div>
           </div>
         </div>

@@ -24,6 +24,7 @@ const participants = [
   { id: 'shipmentAggregate', name: 'ShipmentAggregate', color: 'bg-red-500', shortName: 'SA' }
 ];
 
+// SUCCESS FLOW - Complete order processing
 const successSteps: Step[] = [
   { id: 1, from: 'client', to: 'orderService', message: 'CommandGateway.send(CreateOrderCommand)', type: 'command', delay: 800, condition: 'normal' },
   { id: 2, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
@@ -44,6 +45,7 @@ const successSteps: Step[] = [
   { id: 17, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCompletedEvent)', type: 'event', delay: 600, condition: 'success' }
 ];
 
+// PAYMENT FAILURE FLOW - Payment validation fails
 const paymentFailureSteps: Step[] = [
   { id: 1, from: 'client', to: 'orderService', message: 'CommandGateway.send(CreateOrderCommand)', type: 'command', delay: 800, condition: 'normal' },
   { id: 2, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
@@ -60,6 +62,7 @@ const paymentFailureSteps: Step[] = [
   { id: 13, from: 'orderAggregate', to: 'orderAggregate', message: 'apply(OrderCancelledEvent)', type: 'event', delay: 600, condition: 'failure' }
 ];
 
+// SHIPMENT FAILURE FLOW - Payment succeeds but shipment fails, requires compensation
 const shipmentFailureSteps: Step[] = [
   { id: 1, from: 'client', to: 'orderService', message: 'CommandGateway.send(CreateOrderCommand)', type: 'command', delay: 800, condition: 'normal' },
   { id: 2, from: 'orderService', to: 'orderAggregate', message: '@CommandHandler', type: 'command', delay: 500, condition: 'normal' },
